@@ -11,7 +11,7 @@ DEprot <- function(data,nbCond=NULL,nbRep=NULL,condName=NULL, normalization="SCA
     data<-scale(log2(data))
   }
   else if(identical(normalization, "QUANTILE")){
-    library(preprocessCore)
+    require(preprocessCore)
     data <- log2(data)
     data <- normalize.quantiles(as.matrix(data))
   } 
