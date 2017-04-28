@@ -1,5 +1,5 @@
 require(shiny)
-
+require(ggplot2)
 ## function performing the differential expression analysis
 DEprot <- function(data,nbCond=NULL, rep,condName=NULL, normalization="SCALING"){
   
@@ -188,6 +188,32 @@ shinyServer(function(input, output, session) {
           text(fc[N], -log10(p)[N], labels = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[N,1], cex= 0.5, pos = 2)##adding text on plot
         }
       })
+      
+      ggplotInput <- reactive({
+        values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
+        forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
+        tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
+        p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "blue", "red")),show.legend = F) +
+          geom_vline(xintercept = input$fc ) + #add vertical line
+          geom_vline(xintercept = -input$fc) + #add vertical line
+          geom_hline(yintercept = -log10(input$p)) +  #add vertical line
+          labs(x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() +
+          annotate("text", x=tmp$x, y=tmp$y, 
+                          label=tmp$id,
+                          vjust=-0.1, hjust=-0.1)
+        # 
+        # 
+        # 
+        
+        #         if(input$gene_names) print(q) else print(p)
+        # if(input$gene_names) q else p
+      })
+      
+      output$test<- renderPlot({
+        print(ggplotInput())
+      })
+      
+      
       ##rendering the button allowing to download the Volcano plot for the selected comparison
       output$dlvp <- downloadHandler(
         filename = function() { paste0("VolcanoPlot.",names[input$cond1],".vs.",names[input$cond2], '.svg')},
