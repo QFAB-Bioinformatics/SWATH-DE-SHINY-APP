@@ -1,7 +1,7 @@
-library(shiny)
+require(shiny)
 
-DEprot <- function(data,nbCond=NULL,nbRep=NULL,condName=NULL, normalization="SCALING"){
-  
+## function performing the differential expression analysis
+DEprot <- function(data,nbCond=NULL, rep,condName=NULL, normalization="SCALING"){
   
   ##applying different normalization depending on the normalization parameter 
   normalization=toupper(normalization)
@@ -45,8 +45,7 @@ DEprot <- function(data,nbCond=NULL,nbRep=NULL,condName=NULL, normalization="SCA
   
   ## Setting the cond list depending on the number of conditions and replicates in parameters
   for(i in 1:nbCond){
-    cond[[i]]<-c(col:(col+nbRep-1))
-    col<-col+nbRep
+    cond[[i]]<-c(as.numeric(rep[[i]]))
   }
   data<-as.data.frame(data[complete.cases(data),])
   
@@ -55,9 +54,9 @@ DEprot <- function(data,nbCond=NULL,nbRep=NULL,condName=NULL, normalization="SCA
     for(j in 1:nbCond){
       ##student's test
       p.value[i,j,]<-apply(data,1,function(x){t.test(as.numeric(x[c(cond[[i]])]),as.numeric(x[c(cond[[j]])]), alternative = "t") $p.value})
-
       ## Benjamini hochberg correction of the p value
       adjust.p.value[i,j,]<-p.adjust(p.value[i,j,], method = "BH")
+      
       ##fold change
       fc[i,j,]<-rowMeans(data[,cond[[i]]])-rowMeans(data[,cond[[j]]])
       
@@ -73,26 +72,50 @@ DEprot <- function(data,nbCond=NULL,nbRep=NULL,condName=NULL, normalization="SCA
 }
 
 shinyServer(function(input, output, session) {
-
   ##rendering the text input to enter the conditions name depending on the number of conditions 
   output$text<-renderUI({
     lapply(1:input$nbCond, function(i) {
-      textInput(paste0('c', i), paste0('name of condition ',i," : "))
+        textInput(paste0('c', i), paste0('name of condition ',i," : "))
     })
+  })
+  
+  output$select<-renderUI({
+    lapply(1:input$nbCond, function(i) {
+      selectizeInput(paste0('r', i), paste0('replicates columns of confitions ',i," : "), choices = list('please choose a dataset'="NULL"),multiple =T )
+      })
+  }) 
+    
+  lcol <- reactiveValues()
+  observeEvent(input$dataFile,{
+      lcol$name = colnames(read.table(input$dataFile$datapath, header=T, sep=",",row.names = 1))
+      for(i in 1:input$nbCond){
+        updateSelectizeInput(session, paste0('r', i), choices = setNames(c(1:length(lcol$name)), lcol$name) )
+     }
+  })
+  observeEvent(input$nbCond,{
+      for(i in 1:input$nbCond){
+        if (!is.null(input$dataFile)){
+           updateSelectizeInput(session, paste0('r', i), choices = setNames(c(1:length(lcol$name)), lcol$name) )
+        }
+     }
   })
   
 
   ## when the user clicks on the button submit :
   observeEvent(input$submit, {
     
+    
     dataFile <- input$dataFile
     nbCond <- input$nbCond
-    nbRep <- input$nbRep
     
     updateNumericInput(session, "cond1",max = nbCond)
     updateNumericInput(session, "cond2",max = nbCond)
     
-    
+    rep<-list()
+    for(i in 1:nbCond){
+      rep[[i]]<-eval(parse(text = paste0("input$r",i)))
+    }
+ 
     ##Hides the data selection panel and show the results 
     hide("dselect")
     show("cselect")
@@ -114,7 +137,7 @@ shinyServer(function(input, output, session) {
     
     
     ##applying the DEprot function to the data
-    tryCatch(results <- DEprot(data,nbCond,nbRep,condName = names,normalization = as.character(input$norm)),
+    tryCatch(results <- DEprot(data,nbCond, rep = rep,condName = names,normalization = as.character(input$norm)),
              warning = function(w){shinyjs::info(w)},
              error = function(e){
                if (grepl("essentially constant", as.character(e))){
@@ -128,7 +151,7 @@ shinyServer(function(input, output, session) {
                  hide("cselect")
                  hide("plots")
                }else if (grepl("column", as.character(e))){
-                 shinyjs::info(paste0("number of column in the file : ", ncol(data),"\nnumber of samnples selected :", (nbRep*nbCond), "\nplease enter a valid number of samples"))
+                 shinyjs::info(paste0("number of column in the file : ", ncol(data),"\nnumber of samples selected :", (nbCond), "\nplease enter a valid number of samples"))
                  show("dselect")
                  hide("cselect")
                  hide("plots")
@@ -210,10 +233,10 @@ shinyServer(function(input, output, session) {
       
     ##rendering the boxplots to visualize the normalization of the data
     output$unnormalizedPlot <- renderPlot({
-      boxplot(log2(data) ,main = "boxplot of the log2 data",ylab="log2(Intensity)", xlab="samples",names=c(1:(nbRep*nbCond)))
+      boxplot(log2(data) ,main = "boxplot of the log2 data",ylab="log2(Intensity)", xlab="samples",names=c(1:ncol(data)))
     })
     output$normalizedPlot <- renderPlot({
-      boxplot(results$normdata ,main = "boxplot of the normalized data",ylab="normalized Intensity)", xlab="samples")#,names=c(1:(nbRep*nbCond))
+      boxplot(results$normdata ,main = "boxplot of the normalized data",ylab="normalized Intensity)", xlab="samples",names=c(1:ncol(data)))
     })
     
   })

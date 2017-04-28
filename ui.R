@@ -1,30 +1,33 @@
-library(shiny)
-library(shinythemes)
-library(shinyjs)
+require(shiny)
+require(shinythemes)
+require(shinyjs)
 shinyUI(fluidPage(theme= shinytheme("superhero"),
   useShinyjs(),
   titlePanel("SWATH differential expression"),
   
   div(id = "dselect",
-    sidebarPanel(
+    sidebarPanel(width = 5,
       fileInput("dataFile", "Choose CSV File",
                 accept=c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
       "Note: The input file should be a .CSV file , containing a header and the first column being the protein names, 
-      the other columns being the intensity for the differents samples (replicates of a same condition must be adjoining columns, and the number of replicates must be the same for the differents conditions)",
+      the other columns being the intensity for the differents samples.",
       br(),
       br(),
-      numericInput('nbCond','number of conditions : ',value = 2, min = 2),
-      numericInput('nbRep','number of replicates per conditions : ',value = 2, min = 2),
       
-      selectInput("norm",  "normalization : ", choices = list('Mean centering and scaling' = "MEAN",
-                                                              'quantile normalization' = "QUANTILE",
-                                                              'median centering and scaling' = "MEDIAN",
-                                                              'no normalization' = "NULL")),
-      br(),br(), 
-      conditionalPanel(
-        condition = "input.nbCond != 0",
-        uiOutput("text")
+      fluidRow(
+        column(3, numericInput('nbCond','number of conditions : ',value = 2, min = 2)),
+        column(7, selectInput("norm",  "normalization : ", choices = list('Mean centering and scaling' = "MEAN",
+                                                                          'quantile normalization' = "QUANTILE",
+                                                                          'median centering and scaling' = "MEDIAN",
+                                                                          'no normalization' = "NULL")))
       ),
+      br(),br(), 
+      
+      fluidRow(
+          column(6, conditionalPanel(condition = "input.nbCond != 0", uiOutput("text"))),
+          column(6, conditionalPanel(condition = "input.nbCond != 0",uiOutput("select")))
+      ),
+          
       actionButton("submit","Submit")
     )
   ),
