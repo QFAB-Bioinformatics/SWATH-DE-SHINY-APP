@@ -1,5 +1,7 @@
 require(shiny)
 require(ggplot2)
+require(ggrepel)
+require(svglite)
 ## function performing the differential expression analysis
 DEprot <- function(data,nbCond=NULL, rep,condName=NULL, normalization="SCALING"){
   
@@ -171,45 +173,42 @@ shinyServer(function(input, output, session) {
       )
       
       
-      ##rendering the Volcano plot for the selected comparison
-      output$volcanoPlot <- renderPlot({
-        fc = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,4]
-        p = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,3]
-        plot(fc,
-             -log10(p),
-             main = 'Volcano plot',
-             ylab ="-log10(adjusted p value)",
-             xlab = paste0("fold change ",names[input$cond1]," vs ",names[input$cond2]),
-             abline(h = -log10(input$p), v = c(-input$fc,input$fc)),
-             pch = 20,
-             col = ifelse(p<=input$p & abs(fc)>=input$fc, "red", "blue"))
-         N<-which(p<=input$p & abs(fc)>=input$fc)##threshold
-        if(length(N)!=0){
-          text(fc[N], -log10(p)[N], labels = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[N,1], cex= 0.5, pos = 2)##adding text on plot
-        }
-      })
+      # normal plot :
+      # output$volcanoPlot <- renderPlot({
+      #   fc = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,4]
+      #   p = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,3]
+      #   plot(fc,
+      #        -log10(p),
+      #        main = 'Volcano plot',
+      #        ylab ="-log10(adjusted p value)",
+      #        xlab = paste0("fold change ",names[input$cond1]," vs ",names[input$cond2]),
+      #        abline(h = -log10(input$p), v = c(-input$fc,input$fc)),
+      #        pch = 20,
+      #        col = ifelse(p<=input$p & abs(fc)>=input$fc, "red", "blue"))
+      #    N<-which(p<=input$p & abs(fc)>=input$fc)##threshold
+      #   if(length(N)!=0){
+      #     text(fc[N], -log10(p)[N], labels = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[N,1], cex= 0.5, pos = 2)##adding text on plot
+      #   }
+      # })
       
+      
+      
+      ##rendering the Volcano plot for the selected comparison
       ggplotInput <- reactive({
         values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
         forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
         tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-        p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "blue", "red")),show.legend = F) +
-          geom_vline(xintercept = input$fc ) + #add vertical line
-          geom_vline(xintercept = -input$fc) + #add vertical line
-          geom_hline(yintercept = -log10(input$p)) +  #add vertical line
-          labs(x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() +
-          annotate("text", x=tmp$x, y=tmp$y, 
-                          label=tmp$id,
-                          vjust=-0.1, hjust=-0.1)
-        # 
-        # 
-        # 
-        
-        #         if(input$gene_names) print(q) else print(p)
-        # if(input$gene_names) q else p
+        p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+          scale_color_manual(values = c("blue", "red")) +
+          geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
+                          aes(x,y,label = id)) +
+          geom_vline(xintercept = input$fc ) +
+          geom_vline(xintercept = -input$fc) + 
+          geom_hline(yintercept = -log10(input$p)) + 
+          labs(x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() 
       })
       
-      output$test<- renderPlot({
+      output$volcanoPlot<- renderPlot({
         print(ggplotInput())
       })
       
@@ -218,22 +217,37 @@ shinyServer(function(input, output, session) {
       output$dlvp <- downloadHandler(
         filename = function() { paste0("VolcanoPlot.",names[input$cond1],".vs.",names[input$cond2], '.svg')},
         content = function(file) {
-          fc = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,4]
-          p = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,3]
-          svg(file)
-          plot(fc,
-               -log10(p),
-               main = 'Volcano plot',
-               ylab ="-log10(adjusted p value)",
-               xlab = paste0("fold change ",names[input$cond1]," vs ",names[input$cond2]),
-               abline(h = -log10(input$p), v = c(-input$fc,input$fc)),
-               pch = 20,
-               col = ifelse(p<=input$p & abs(fc)>=input$fc, "red", "blue"))
-          N<-which(p<=input$p & abs(fc)>=input$fc)
-          if(length(N)!=0){
-            text(fc[N], -log10(p)[N], labels = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[N,1], cex= 0.5, pos = 2)##row(as.matrix(fc))[N]
-          }
-          dev.off()
+          
+          values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
+          forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
+          tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
+          # fc = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,4]
+          # p = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[,3]
+          # svg(file)
+          p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+            scale_color_manual(values = c("blue", "red")) +
+            geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
+                            aes(x,y,label = id),
+                            size = 2) +
+            geom_vline(xintercept = input$fc ) +
+            geom_vline(xintercept = -input$fc) + 
+            geom_hline(yintercept = -log10(input$p)) + 
+            labs(x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() 
+          ggsave(file,plot = p)
+          
+          # plot(fc,
+          #      -log10(p),
+          #      main = 'Volcano plot',
+          #      ylab ="-log10(adjusted p value)",
+          #      xlab = paste0("fold change ",names[input$cond1]," vs ",names[input$cond2]),
+          #      abline(h = -log10(input$p), v = c(-input$fc,input$fc)),
+          #      pch = 20,
+          #      col = ifelse(p<=input$p & abs(fc)>=input$fc, "red", "blue"))
+          # N<-which(p<=input$p & abs(fc)>=input$fc)
+          # if(length(N)!=0){
+          #   text(fc[N], -log10(p)[N], labels = as.data.frame(results$dataprocessed[input$cond1,input$cond2])[N,1], cex= 0.5, pos = 2)##row(as.matrix(fc))[N]
+          # }
+          # dev.off()
         }
       )
       ##rendering the data frame containing the results for the proteins above the threshold (significant proteins) for the selected comparison
