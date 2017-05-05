@@ -60,7 +60,7 @@ shinyUI(fluidPage(theme= shinytheme("superhero"),
                                ),
                                
                                conditionalPanel(
-                                 condition= "input.manual == FALSE",
+                                 condition= "input.manual == false",
                                  numericInput('comp','comparison',value = 1, min = 1)
                                ),
                                

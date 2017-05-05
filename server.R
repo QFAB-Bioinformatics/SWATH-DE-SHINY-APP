@@ -1,5 +1,6 @@
 require(shiny)
 require(ggplot2)
+require(preprocessCore)
 require(ggrepel)
 require(svglite)
 ## function performing the differential expression analysis
@@ -212,7 +213,7 @@ shinyServer(function(input, output, session) {
         values <- as.data.frame(results[[input$comp]])
         forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
         tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-        p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+        p <- ggplot(forplot) + geom_point(aes(x, y , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
           scale_color_manual(values = c("blue", "red")) +
           geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                           aes(x,y,label = id),
@@ -236,7 +237,7 @@ shinyServer(function(input, output, session) {
           values <- as.data.frame(results[[input$comp]])
           forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
           tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-          p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+          p <- ggplot(forplot) + geom_point(aes(x, y , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
             scale_color_manual(values = c("blue", "red")) +
             geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                             aes(x,y,label = id),
@@ -346,7 +347,7 @@ shinyServer(function(input, output, session) {
         values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
         forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
         tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-        p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+        p <- ggplot(forplot) + geom_point(aes(x, y, color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
           scale_color_manual(values = c("blue", "red")) +
           geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                           aes(x,y,label = id)) +
@@ -368,7 +369,7 @@ shinyServer(function(input, output, session) {
           values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
           forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
           tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-          p <- ggplot(forplot) + geom_point(aes(x, y, label= id , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+          p <- ggplot(forplot) + geom_point(aes(x, y, color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
             scale_color_manual(values = c("blue", "red")) +
             geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                             aes(x,y,label = id),

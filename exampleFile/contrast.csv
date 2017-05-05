@@ -1,0 +1,5 @@
+"","adult - control","lessone - control","onetofive - control","adult + lessone + onetofive - control"
+"adult",1,0,0,1
+"control",-1,-1,-1,-1
+"lessone",0,1,0,1
+"onetofive",0,0,1,1
