@@ -107,9 +107,6 @@ test.stat <- function(data, stat = "t.test" , design , contrast){
   
   
   nbComp<-ncol(contrast)
-  fc <- list()
-  p.value <- list()
-  adjust.p.value<-list()
   listResults<-list()
   
   for (i in 1:nbComp){
@@ -123,15 +120,15 @@ test.stat <- function(data, stat = "t.test" , design , contrast){
     colop <- which(colnames(data) %in% samplesop)
     colref <- which(colnames(data) %in% samplesref)
     
-    p.value[[i]]<-apply(data,1,function(x){t.test(as.numeric(x[colref]),as.numeric(x[colop]), alternative = "t") $p.value})
-    adjust.p.value[[i]]<-p.adjust(p.value[[i]], method = "BH")
+    p.value<-apply(data,1,function(x){t.test(as.numeric(x[colref]),as.numeric(x[colop]), alternative = "t") $p.value})
+    adjust.p.value<-p.adjust(p.value, method = "BH")
     
-    fc[[i]]<-rowMeans(data[,colop])-rowMeans(data[,colref])
+    fc<-rowMeans(data[,colop])-rowMeans(data[,colref])
     
     listResults[[i]]<-data.frame(protein=c(row.names(data)))
-    listResults[[i]][paste("p.value.",colnames(contrast)[i],sep="")]=c(p.value[[i]])
-    listResults[[i]][paste("adjust.p.value.",colnames(contrast)[i],sep="")]=c(adjust.p.value[[i]])
-    listResults[[i]][paste("fc.",colnames(contrast)[i],sep="")]=c(fc[[i]])
+    listResults[[i]][paste("p.value.",colnames(contrast)[i],sep="")]=c(p.value)
+    listResults[[i]][paste("adjust.p.value.",colnames(contrast)[i],sep="")]=c(adjust.p.value)
+    listResults[[i]][paste("fc.",colnames(contrast)[i],sep="")]=c(fc)
     
   }
   return(listResults)
