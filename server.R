@@ -1,4 +1,5 @@
 require(shiny)
+require(plotly)
 require(ggplot2)
 require(preprocessCore)
 require(ggrepel)
@@ -352,7 +353,8 @@ shinyServer(function(input, output, session) {
           geom_vline(xintercept = -input$fc) + 
           geom_hline(yintercept = -log10(input$p)) + 
           labs(title=paste0("VolcanoPlot.",names[input$cond1],".vs.",names[input$cond2]),x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() 
-      })
+      
+        })
       
       output$volcanoPlot<- renderPlot({
         print(ggplotInput())

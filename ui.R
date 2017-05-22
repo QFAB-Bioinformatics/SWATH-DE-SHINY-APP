@@ -77,7 +77,7 @@ shinyUI(fluidPage(theme= shinytheme("superhero"),
                   mainPanel(
                     hidden(div(id = "plots",
                                tabsetPanel(
-                                 tabPanel("Volcano plot", plotOutput("volcanoPlot", height = "720px", width = "1280px"),downloadButton('dlvp', 'Download Volcano plot (.svg)')),
+                                 tabPanel("Volcano plot", plotlyOutput("volcanoPlot", height = "720px", width = "1280px"),downloadButton('dlvp', 'Download Volcano plot (.svg)')),
                                  tabPanel("boxplot", plotOutput("unnormalizedPlot", height = "600px"), plotOutput("normalizedPlot", height = "600px"))
                                ),
                                br(), 
