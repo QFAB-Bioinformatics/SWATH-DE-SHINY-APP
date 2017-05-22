@@ -211,8 +211,8 @@ shinyServer(function(input, output, session) {
         values <- as.data.frame(results[[input$comp]])
         forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
         tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-        p <- ggplot(forplot) + geom_point(aes(x, y , color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
-          scale_color_manual(values = c("blue", "red")) +
+        p <- ggplot(forplot) + geom_point(aes(x, y , label = id, color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "DE proteins", "not significant")),show.legend = F) +
+          scale_color_manual(values = c("red", "blue")) +
           geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                           aes(x,y,label = id),
                           size = 4) +
@@ -222,8 +222,8 @@ shinyServer(function(input, output, session) {
           labs(title = plotTitle,x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw()  
       })
       
-      output$volcanoPlot<- renderPlot({
-        print(ggplotInput())
+      output$volcanoPlot<- renderPlotly({
+        ggplotly(ggplotInput(), tooltip = c("x","y","id")) %>% layout()
       })
       
       
@@ -345,7 +345,7 @@ shinyServer(function(input, output, session) {
         values <- as.data.frame(results$dataprocessed[input$cond1,input$cond2])
         forplot <- data.frame(x=as.numeric(values[,4]), y=-log10(values[,3]), id=as.character(values[,1]))
         tmp <- forplot[as.numeric(forplot$y)>=-log10(input$p) & abs(forplot$x)>input$fc,]
-        p <- ggplot(forplot) + geom_point(aes(x, y, color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "not signi", "FC")),show.legend = F) +
+        p <- ggplot(forplot) + geom_point(aes(x, y, color = ifelse(y>=-log10(input$p) & abs(x)>=input$fc, "DE proteins", "not significant")),show.legend = F) +
           scale_color_manual(values = c("blue", "red")) +
           geom_text_repel(data = subset(forplot, abs(forplot$x)>=input$fc & forplot$y>=-log10(input$p)),
                           aes(x,y,label = id)) +
@@ -353,11 +353,11 @@ shinyServer(function(input, output, session) {
           geom_vline(xintercept = -input$fc) + 
           geom_hline(yintercept = -log10(input$p)) + 
           labs(title=paste0("VolcanoPlot.",names[input$cond1],".vs.",names[input$cond2]),x="log2(Fold-change)", y="-log10(P.Value)") + theme_bw() 
+        
+      })
       
-        })
-      
-      output$volcanoPlot<- renderPlot({
-        print(ggplotInput())
+      output$volcanoPlot<- renderPlotly({
+        ggplotly(ggplotInput(), tooltip = c("x","y","id")) %>% layout()
       })
       
       
