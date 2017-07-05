@@ -1,6 +1,7 @@
 require(shiny)
 require(shinythemes)
 require(shinyjs)
+require(plotly)
 shinyUI(fluidPage(theme= shinytheme("superhero"),
                   useShinyjs(),
                   titlePanel("SWATH differential expression"),

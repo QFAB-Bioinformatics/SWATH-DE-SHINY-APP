@@ -1,5 +1,4 @@
 require(shiny)
-require(plotly)
 require(ggplot2)
 require(preprocessCore)
 require(ggrepel)
