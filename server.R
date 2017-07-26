@@ -3,7 +3,7 @@ require(ggplot2)
 require(preprocessCore)
 require(ggrepel)
 require(svglite)
-## function performing the differential expression analysis
+## function performing the normalization and the differential expression analysis when the experiment design is given manually
 DEprot <- function(data,nbCond=NULL, rep,condName=NULL, normalization="MEAN"){
   
   ##applying different normalization depending on the normalization parameter 
@@ -74,6 +74,8 @@ DEprot <- function(data,nbCond=NULL, rep,condName=NULL, normalization="MEAN"){
   return(results)
 }
 
+
+## normalization function when the design of the experiment is given in a file 
 norm <- function(data, normalization="MEAN"){
   
   if(!is.data.frame(data) & !is.matrix(data)){print("the data must be a data.frame or a matrix")}
