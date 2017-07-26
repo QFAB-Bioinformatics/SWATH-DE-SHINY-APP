@@ -79,7 +79,9 @@ norm <- function(data, normalization="MEAN"){
   if(!is.data.frame(data) & !is.matrix(data)){print("the data must be a data.frame or a matrix")}
   
   normalization=toupper(normalization)
-  if(identical(normalization, "MEAN")){
+  if(identical(normalization, "NULL")){
+  }
+  else if(identical(normalization, "MEAN")){
     data<-scale(log2(data))
   }
   else if(identical(normalization, "QUANTILE")){
@@ -95,7 +97,7 @@ norm <- function(data, normalization="MEAN"){
     }
   }
   else{
-    stop("normalization must be : 'MEAN', 'QUANTILE' or 'MEDIAN'")
+    stop("normalization must be : 'MEAN', 'QUANTILE', 'MEDIAN' or 'NULL'")
   }
   return(data)
 }
